@@ -6,7 +6,7 @@ from rest_framework.routers import DefaultRouter
 from task.views import TaskViewSet
 
 router = DefaultRouter()
-router.register(r'tasks', TaskViewSet)
+router.register(r'api/tasks', TaskViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
