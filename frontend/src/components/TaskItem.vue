@@ -8,7 +8,7 @@
     <p class="description">{{ task.description || 'Aucune description' }}</p>
     
     <div class="task-meta">
-      <span>Priorité: {{ '⭐'.repeat(task.priority) }}</span>
+      <span>Priorité: {{ priorityStars }}</span>
       <span>{{ formatDate(task.created_at) }}</span>
     </div>
 
@@ -65,6 +65,16 @@ const statusLabel = computed(() => ({
   'done': 'Terminé',
   'cancelled': 'Annulé'
 }[props.task.status]))
+
+const safePriority = computed(() => {
+  const count = Number(props.task.priority)
+  return Number.isInteger(count) ? Math.max(0, count) : 0
+})
+
+const priorityStars = computed(() => {
+  const stars = '⭐'.repeat(safePriority.value)
+  return stars || 'Aucune'
+})
 
 const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR')
 
