@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     #edition personel 
     'rest_framework',
     'corsheaders',
-    'tasks',
+    'task',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +54,17 @@ MIDDLEWARE = [
 
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Pour le dev
+    ]
+}
 
 ROOT_URLCONF = 'backend.urls'
 
