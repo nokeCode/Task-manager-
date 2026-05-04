@@ -1,11 +1,11 @@
 <template>
   <form @submit.prevent="submitTask" class="task-form">
-    <h3>Nouvelle Tâche</h3>
+    <h3>{{ editMode ? 'Edit Task' : 'New Task' }}</h3>
     
     <div class="form-group">
       <input 
         v-model="task.title" 
-        placeholder="Titre de la tâche *"
+        placeholder="Task title *"
         required
       />
     </div>
@@ -13,44 +13,53 @@
     <div class="form-group">
       <textarea 
         v-model="task.description" 
-        placeholder="Description détaillée"
+        placeholder="Detailed description"
         rows="3"
       />
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>Priorité</label>
+        <label>Priority</label>
         <select v-model="task.priority">
-          <option :value="1">1 - Basse</option>
+          <option :value="1">1 - Low</option>
           <option :value="2">2</option>
-          <option :value="3">3 - Moyenne</option>
+          <option :value="3">3 - Medium</option>
           <option :value="4">4</option>
-          <option :value="5">5 - Haute</option>
+          <option :value="5">5 - High</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label>Date d'échéance</label>
+        <label>Due Date</label>
         <input type="datetime-local" v-model="task.due_date" />
       </div>
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-primary" :disabled="isSubmitting">
-        {{ isSubmitting ? 'Création...' : 'Créer la tâche' }}
+      <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+        {{ isSubmitting ? 'Saving...' : (editMode ? 'Update Task' : 'Create Task') }}
       </button>
+      <button type="button" @click="$emit('cancel')" class="btn btn-secondary">Cancel</button>
     </div>
   </form>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useTaskStore } from '../stores/taskStore'
 
-const emit = defineEmits(['task-created'])
+const props = defineProps({
+  editTask: {
+    type: Object,
+    default: null
+  }
+})
+const emit = defineEmits(['task-created', 'task-updated', 'cancel'])
 const taskStore = useTaskStore()
 const isSubmitting = ref(false)
+
+const editMode = ref(!!props.editTask)
 
 const task = ref({
   title: '',
@@ -60,14 +69,28 @@ const task = ref({
   due_date: null
 })
 
+watch(() => props.editTask, (newTask) => {
+  if (newTask) {
+    task.value = { ...newTask }
+    editMode.value = true
+  } else {
+    task.value = { title: '', description: '', priority: 3, status: 'todo', due_date: null }
+    editMode.value = false
+  }
+}, { immediate: true })
+
 const submitTask = async () => {
   isSubmitting.value = true
   try {
-    await taskStore.addTask(task.value)
-    task.value = { title: '', description: '', priority: 3, status: 'todo', due_date: null }
-    emit('task-created')
+    if (editMode.value) {
+      await taskStore.updateTask(task.value)
+      emit('task-updated')
+    } else {
+      await taskStore.addTask(task.value)
+      emit('task-created')
+    }
   } catch (err) {
-    alert('Erreur lors de la création: ' + err.message)
+    alert('Error: ' + err.message)
   } finally {
     isSubmitting.value = false
   }
@@ -76,27 +99,64 @@ const submitTask = async () => {
 
 <style scoped>
 .task-form {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
+  background: var(--pure-white);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.task-form h3 {
+  margin-bottom: 20px;
+  color: var(--text-primary);
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 10px 12px;
+  border: 1px solid var(--secondary-gray);
+  border-radius: var(--radius-md);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
 }
 
 .form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;

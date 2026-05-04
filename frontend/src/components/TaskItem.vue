@@ -2,48 +2,54 @@
   <div :class="['task-card', `status-${task.status}`]">
     <div class="task-header">
       <h3>{{ task.title }}</h3>
-      <span :class="['badge', task.status]">{{ statusLabel }}</span>
+      <span :class="['status-badge', task.status]">{{ statusLabel }}</span>
     </div>
     
-    <p class="description">{{ task.description || 'Aucune description' }}</p>
+    <p class="task-description">{{ task.description || 'No description' }}</p>
     
     <div class="task-meta">
-      <span>Priorité: {{ priorityStars }}</span>
-      <span>{{ formatDate(task.created_at) }}</span>
+      <div class="priority">
+        <span>Priority: </span>
+        <span class="stars">{{ priorityStars }}</span>
+      </div>
+      <div class="due-date">
+        <span>Due: </span>
+        <span>{{ formatDate(task.due_date || task.created_at) }}</span>
+      </div>
     </div>
 
-    <div class="actions">
+    <div class="task-actions">
       <select 
         :value="task.status" 
         @change="$emit('status-change', { id: task.id, status: $event.target.value })"
         class="status-select"
       >
-        <option value="todo">À faire</option>
-        <option value="in_progress">En cours</option>
-        <option value="done">Terminé</option>
-        <option value="cancelled">Annulé</option>
+        <option value="todo">To Do</option>
+        <option value="in_progress">In Progress</option>
+        <option value="done">Done</option>
+        <option value="cancelled">Cancelled</option>
       </select>
       
-      <button @click="isEditing = true" class="btn-edit">✏️</button>
-      <button @click="$emit('delete', task.id)" class="btn-delete">🗑️</button>
+      <button @click="isEditing = true" class="btn btn-secondary">Edit</button>
+      <button @click="$emit('delete', task.id)" class="btn btn-danger">Delete</button>
     </div>
 
-    <!-- Modal d'édition -->
+    <!-- Edit Modal -->
     <div v-if="isEditing" class="modal" @click.self="isEditing = false">
       <div class="modal-content">
-        <h3>Modifier la tâche</h3>
-        <input v-model="editTask.title" placeholder="Titre" />
+        <h3>Edit Task</h3>
+        <input v-model="editTask.title" placeholder="Title" />
         <textarea v-model="editTask.description" placeholder="Description" />
         <select v-model="editTask.priority">
-          <option :value="1">Priorité 1</option>
-          <option :value="2">Priorité 2</option>
-          <option :value="3">Priorité 3</option>
-          <option :value="4">Priorité 4</option>
-          <option :value="5">Priorité 5</option>
+          <option :value="1">Priority 1</option>
+          <option :value="2">Priority 2</option>
+          <option :value="3">Priority 3</option>
+          <option :value="4">Priority 4</option>
+          <option :value="5">Priority 5</option>
         </select>
         <div class="modal-actions">
-          <button @click="saveEdit" class="btn-primary">Sauvegarder</button>
-          <button @click="isEditing = false">Annuler</button>
+          <button @click="saveEdit" class="btn btn-primary">Save</button>
+          <button @click="isEditing = false" class="btn btn-secondary">Cancel</button>
         </div>
       </div>
     </div>
@@ -60,10 +66,10 @@ const isEditing = ref(false)
 const editTask = ref({ ...props.task })
 
 const statusLabel = computed(() => ({
-  'todo': 'À faire',
-  'in_progress': 'En cours',
-  'done': 'Terminé',
-  'cancelled': 'Annulé'
+  'todo': 'To Do',
+  'in_progress': 'In Progress',
+  'done': 'Done',
+  'cancelled': 'Cancelled'
 }[props.task.status]))
 
 const safePriority = computed(() => {
@@ -86,17 +92,151 @@ const saveEdit = () => {
 
 <style scoped>
 .task-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border-left: 4px solid #ddd;
-  transition: transform 0.2s;
+  background: var(--pure-white);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-smooth);
+  border-left: 4px solid var(--secondary-gray);
 }
 
 .task-card:hover {
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.task-card.status-todo {
+  border-left-color: var(--accent-red);
+}
+
+.task-card.status-in_progress {
+  border-left-color: var(--accent-yellow);
+}
+
+.task-card.status-done {
+  border-left-color: var(--accent-green);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.task-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.todo {
+  background: var(--accent-red);
+  color: var(--pure-white);
+}
+
+.status-badge.in_progress {
+  background: var(--accent-yellow);
+  color: var(--text-primary);
+}
+
+.status-badge.done {
+  background: var(--accent-green);
+  color: var(--pure-white);
+}
+
+.task-description {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.task-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.priority .stars {
+  color: #FFD700;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-select {
+  padding: 6px 12px;
+  border: 1px solid var(--secondary-gray);
+  border-radius: var(--radius-md);
+  background: var(--pure-white);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.btn-danger {
+  background: var(--accent-red);
+  color: var(--pure-white);
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--pure-white);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--secondary-gray);
+  border-radius: var(--radius-md);
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .status-todo { border-left-color: #ff6b6b; }
